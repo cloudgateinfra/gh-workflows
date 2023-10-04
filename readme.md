@@ -33,7 +33,7 @@ Simply run the actions with one click to deploy the new app image to the ecs clu
 
 ## Terraform ECS Envs
 
-Infra managed with Terraform repo envs [here](https://github.com/terraform-envs/tree/master).
+Infra managed with Terraform repo envs [here](https://github.com/cloudgateinfra/terraform-ecs).
 
 ## GitHub Actions Workflows
 
