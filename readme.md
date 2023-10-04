@@ -2,7 +2,7 @@
 
 Workflows are triggered on a push to the main/master branch or a manual trigger one-click:
 
-- `deployimage.yml` = builds app with [base image](https://github.com/templates/Dockerfile.base) then push app image to ECR for deploy in place to ECS service.
+- `deployimage.yml` = builds app with a docker or ecr base image then pushes app image to ECR for deploy in place to ECS ecr-repo/cluster/service.
 - `loaddb.yml`      = loads a mysql dump onto an rds instance via bastion mysql client in the same VPC.
 
 *Note: build is done during deploy workflow because secrets need to be passed as env vars at container runtime. This happens via the task definition that is managed with our terraform envs. This avoids secrets being built into image which is a security vulnerability.*
