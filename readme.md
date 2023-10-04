@@ -29,7 +29,7 @@ Edit the following environment variables in the workflow file as needed:
 - `IMAGE_TAG`: Docker image tag.
 
 ## Usage
-Simply run the actions with one click to deploy the new app image to the ecs cluster/service in place [here](https://github.com/actions/workflows/deployimage.yml).
+Simply run the actions with one click to deploy the new app image to the ecs cluster/service in place [here](https://github.com/cloudgateinfra/gh-workflows/blob/master/deploywebappbasic.yml).
 
 ## Terraform ECS Envs
 
