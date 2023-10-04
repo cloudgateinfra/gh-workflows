@@ -1,5 +1,6 @@
 # AWS CLI Deploy to ECS
 
+*Originall based on: https://github.com/cloudgateinfra/gh-actions-ec2-deploy*
 Workflows are triggered on a push to the main/master branch or a manual trigger one-click:
 
 - `deployimage.yml` = builds app with a docker or ecr base image then pushes app image to ECR for deploy in place to ECS ecr-repo/cluster/service.
