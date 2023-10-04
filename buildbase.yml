@@ -1,0 +1,39 @@
+name: aws ecr ecs base push
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # manual triggers master/main only
+
+env:
+  AWS_REGION: 'us-west-2'
+  ECR_REPOSITORY: 'base_images' # align w terra ecr name
+  ECS_SERVICE: 'my_service' # align w terra service name
+  ECS_CLUSTER: 'my_cluster' # align w terra cluster name
+  IMAGE_NAME: 'base_v2'
+  IMAGE_TAG: 'latest'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo to runner
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and Push Docker Image to ECR
+        run: |
+          docker build -f ${GITHUB_WORKSPACE}/templates/Dockerfile.base -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}

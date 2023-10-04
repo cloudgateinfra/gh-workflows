@@ -1,0 +1,53 @@
+name: load db dump rds instance
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AWS_REGION: 'us-west-2'
+  DUMP_FILE_NAME: 'dump_prod_example.tar.gz' # set dump file path here from s3 bucket
+
+jobs:
+  restore-db:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo to runner
+        uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get Bastion Host IP
+        run: |
+          echo "BASTION_HOST_IP=$(aws ec2 describe-instances --filters 'Name=tag:Name,Values=Bastion Host' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)" >> $GITHUB_ENV
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.JUMPHOST_PRIVATE_KEY_AWS }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Add the bastion host to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ env.BASTION_HOST_IP }} >> ~/.ssh/known_hosts
+
+      - name: Copy restore script to Bastion Host
+        run: |
+          scp ./restore_db.sh ubuntu@${{ env.BASTION_HOST_IP }}:/tmp/restore_db.sh
+
+      - name: Set execute permissions and run restore script
+        run: |
+          ssh ubuntu@${{ env.BASTION_HOST_IP }} "
+              chmod +x /tmp/restore_db.sh
+              /tmp/restore_db.sh \"${{ secrets.AWS_ACCESS_KEY_ID }}\" \"${{ secrets.AWS_SECRET_ACCESS_KEY }}\" \"${{ env.AWS_REGION }}\" \"${{ secrets.db_pw }}\" \"${{ secrets.db_username }}\" \"${{ secrets.db_name }}\" \"${{ env.DUMP_FILE_NAME }}\"
+          "
+

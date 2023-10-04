@@ -1,0 +1,61 @@
+name: aws cli deploy ecs buildx multi arch base via dockerhub
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AWS_REGION: 'us-west-2'
+  ECR_REPOSITORY: 'app_images' # align w terra ecr name
+  ECS_SERVICE: 'my_service' # align w terra service name
+  ECS_CLUSTER: 'my_cluster' # align w terra cluster name
+  IMAGE_NAME: 'dev2'
+  IMAGE_TAG: 'latest'
+  
+  DOCKER_BUILD_PATH: '${GITHUB_WORKSPACE}/test-sites/app2'
+  DOCKERFILE_PATH: 'Dockerfile'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo to runner
+        uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Check architecture
+        run: uname -m
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and Push Docker Image to ECR using Buildx
+        run: |
+          docker buildx create --use
+          docker buildx build --platform linux/amd64,linux/arm64 --no-cache -f ${{ env.DOCKER_BUILD_PATH }}/${{ env.DOCKERFILE_PATH }} -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} . --push
+
+      - name: Update AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update
+
+      - name: Force New Deployment on ECS Service
+        run: |
+          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE }} --force-new-deployment
