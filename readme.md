@@ -22,9 +22,9 @@ Define the following secrets in the GitHub repo:
 Edit the following environment variables in the workflow file as needed:
 
 - `AWS_REGION`: AWS region.
-- `ECR_REPOSITORY`: ECR repository name.
-- `ECS_SERVICE`: ECS service name.
-- `ECS_CLUSTER`: ECS cluster name.
+- `ECR_REPOSITORY`: ECR repository name - **aligns w/ terra cloud env local vars**
+- `ECS_SERVICE`: ECS service name - **aligns w/ terra cloud env local vars**
+- `ECS_CLUSTER`: ECS cluster name - **aligns w/ terra cloud env local vars**
 - `DOCKER_HUB_USERNAME`: Docker Hub username.
 - `DOCKER_HUB_TOKEN`: Docker Hub access token.
 - `IMAGE_NAME`: Docker image name.
